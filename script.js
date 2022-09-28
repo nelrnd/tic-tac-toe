@@ -8,6 +8,7 @@ function playerMaker(name, mark) {
   const placeMark = (position) => {
     if (!gameboard.checkIfSquareEmpty(position)) return;
     gameboard.grid[position] = mark;
+    gameboard.insertMark(position, mark);
     gameboard.checkWinningPatterns(mark);
     game.switchCurrentPlayer();
   }
@@ -75,11 +76,20 @@ const gameboard = (function() {
     }
   }
 
+  const insertMark = (position, mark) => {
+    const squares = document.querySelectorAll('.square');
+    const markImg = document.createElement('img');
+    markImg.src = `./assets/${mark.toLowerCase()}.svg`;
+    markImg.alt = 'mark icon';
+    squares[position].appendChild(markImg);
+  };
+
   return {
     grid,
     checkIfSquareEmpty,
     checkWinningPatterns,
-    drawGameboard
+    drawGameboard,
+    insertMark
   };
 })();
 
