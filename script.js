@@ -8,6 +8,7 @@ function playerMaker(name, mark) {
   const placeMark = (position) => {
     if (!gameboard.checkIfSquareEmpty(position)) return;
     gameboard.grid[position] = mark;
+    gameboard.checkWinningPatterns(mark);
   }
 
   return {
@@ -35,11 +36,34 @@ const gameboard = (function() {
     }
   };
 
+  const checkWinningPatterns = (mark) => {
+    // convert grid to same format as winning patterns
+    const gridCopy = [...grid];
+    gridCopy.forEach((item, index) => {
+      if (item === mark) {
+        gridCopy[index] = '1';
+      } else {
+        gridCopy[index] = '0';
+      }
+    });
+
+    // check if there is a corresponding winning pattern
+    for (pattern of winningPatterns) {
+      let match = true;
+      pattern.split('').forEach((item, index) => {
+        if (item === '1' && gridCopy[index] != '1') {
+          match = false;
+        }
+      });
+      if (match) console.log('We have a winner!');
+    }
+  };
+
   return {
     grid,
-    checkIfSquareEmpty
+    checkIfSquareEmpty,
+    checkWinningPatterns
   };
 })();
 
-const player1 = playerMaker('Mathilde', 'X');
-const player2 = playerMaker('Nel', 'O');
+const player1 = playerMaker('NEL', 'X');
