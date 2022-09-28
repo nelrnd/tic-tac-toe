@@ -5,10 +5,26 @@ function playerMaker(name, mark) {
   const getScore = () => score;
   const incrementScore = () => score++;
 
+  const placeMark = (position) => {
+    gameboard.grid[position] = mark;
+  }
+
   return {
     getName,
     getMark,
     getScore,
-    incrementScore
+    incrementScore,
+    placeMark
   };
 };
+
+const gameboard = (function() {
+  const grid = [0,0,0,0,0,0,0,0,0];
+
+  const winningPatterns = [
+    '111000000','000111000','000000111','100100100',
+    '010010010','001001001','100010001','001010100'
+  ];
+
+  return {grid};
+})();
