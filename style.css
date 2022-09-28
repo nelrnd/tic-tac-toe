@@ -8,3 +8,18 @@ body {
   font-family: sans-serif;
   padding: 2rem;
 }
+
+#gameboard {
+  display: inline-grid;
+  grid-template-columns: repeat(3, 110px);
+  grid-template-rows: repeat(3, 110px);
+
+  border-radius: 25px;
+  overflow: hidden;
+  outline: solid 8px #DFDFDF;
+}
+
+#gameboard .square {
+  background-color: white;
+  outline: solid 8px #DFDFDF;
+}

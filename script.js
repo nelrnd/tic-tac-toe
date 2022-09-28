@@ -9,6 +9,7 @@ function playerMaker(name, mark) {
     if (!gameboard.checkIfSquareEmpty(position)) return;
     gameboard.grid[position] = mark;
     gameboard.checkWinningPatterns(mark);
+    game.switchCurrentPlayer();
   }
 
   return {
@@ -59,10 +60,26 @@ const gameboard = (function() {
     }
   };
 
+  const drawGameboard = () => {
+    const gameboard = document.querySelector('#gameboard');
+    gameboard.innerHTML = '';
+
+    for (let i = 0; i < grid.length; i++) {
+      const square = document.createElement('div');
+      square.id = i;
+      square.classList.add('square');
+      square.addEventListener('click', () => {
+        game.getCurrentPlayer().placeMark(i);
+      });
+      gameboard.appendChild(square);
+    }
+  }
+
   return {
     grid,
     checkIfSquareEmpty,
-    checkWinningPatterns
+    checkWinningPatterns,
+    drawGameboard
   };
 })();
 
@@ -70,7 +87,7 @@ const game = (function() {
   const player1 = playerMaker('Nami', 'X');
   const player2 = playerMaker('Sanji', 'O');
 
-  let currentPlayer = player1;
+  let currentPlayer;
   const getCurrentPlayer = () => currentPlayer;
   const switchCurrentPlayer = () => {
     if (currentPlayer === player1) {
@@ -80,8 +97,16 @@ const game = (function() {
     }
   };
 
+  const start = () => {
+    gameboard.drawGameboard();
+    currentPlayer = player1;
+  };
+
   return {
     getCurrentPlayer,
-    switchCurrentPlayer
+    switchCurrentPlayer,
+    start
   };
 })();
+
+game.start();
