@@ -66,4 +66,22 @@ const gameboard = (function() {
   };
 })();
 
-const player1 = playerMaker('NEL', 'X');
+const game = (function() {
+  const player1 = playerMaker('Nami', 'X');
+  const player2 = playerMaker('Sanji', 'O');
+
+  let currentPlayer = player1;
+  const getCurrentPlayer = () => currentPlayer;
+  const switchCurrentPlayer = () => {
+    if (currentPlayer === player1) {
+      currentPlayer = player2;
+    } else {
+      currentPlayer = player1;
+    }
+  };
+
+  return {
+    getCurrentPlayer,
+    switchCurrentPlayer
+  };
+})();
