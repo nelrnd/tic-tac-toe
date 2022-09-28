@@ -6,6 +6,7 @@ function playerMaker(name, mark) {
   const incrementScore = () => score++;
 
   const placeMark = (position) => {
+    if (!gameboard.checkIfSquareEmpty(position)) return;
     gameboard.grid[position] = mark;
   }
 
@@ -26,5 +27,19 @@ const gameboard = (function() {
     '010010010','001001001','100010001','001010100'
   ];
 
-  return {grid};
+  const checkIfSquareEmpty = (position) => {
+    if (grid[position] === 0) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  return {
+    grid,
+    checkIfSquareEmpty
+  };
 })();
+
+const player1 = playerMaker('Mathilde', 'X');
+const player2 = playerMaker('Nel', 'O');
