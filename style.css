@@ -12,8 +12,12 @@
   box-sizing: border-box;
 }
 
+html {
+  height: 100%;
+}
+
 body {
-  min-height: 100vh;
+  min-height: 100%;
 
   display: grid;
   align-content: center;
@@ -23,7 +27,7 @@ body {
 
 #gameboard {
   width: min(510px, 100%);
-  aspect-ratio: 1 / 1;
+  height: min(510px, 100vw);
   
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -87,6 +91,16 @@ button:hover {
     opacity: 1;
   }
 }
+@-webkit-keyframes modalAppear {
+  0% {
+    transform: translateY(100px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
 
 #modal {
   position: absolute;
@@ -110,6 +124,7 @@ button:hover {
 
   text-align: center;
   animation: 0.3s ease-in 0s 1 modalAppear;
+  -webkit-animation: 0.3s ease-in 0s 1 modalAppear;
 }
 
 h2 {
