@@ -91,16 +91,6 @@ button:hover {
     opacity: 1;
   }
 }
-@-webkit-keyframes modalAppear {
-  0% {
-    transform: translateY(100px);
-    opacity: 0;
-  }
-  100% {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
 
 #modal {
   position: absolute;
@@ -123,8 +113,8 @@ button:hover {
   border-radius: 25px;
 
   text-align: center;
-  animation: 0.3s ease-in 0s 1 modalAppear;
-  -webkit-animation: 0.3s ease-in 0s 1 modalAppear;
+  animation: 0.3s ease-in .1s 1 modalAppear;
+  animation-fill-mode: both;
 }
 
 h2 {
