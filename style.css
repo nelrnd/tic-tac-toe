@@ -18,7 +18,7 @@ body {
   display: grid;
   align-content: center;
   justify-items: center;
-  gap: 48px;
+  gap: 24px;
 }
 
 #gameboard {
@@ -115,4 +115,25 @@ button:hover {
 h2 {
   font-weight: 500;
   margin-bottom: 1rem;
+}
+
+#scoreboard {
+  width: min(510px, 100%);
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--dark);
+}
+
+#scoreboard .score {
+  font-size: 16px;
+  font-weight: 400;
+  color: #838383;
+}
+
+#scoreboard > div:nth-of-type(2) {
+  text-align: right;
 }

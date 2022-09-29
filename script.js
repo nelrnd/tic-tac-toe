@@ -60,6 +60,7 @@ const gameboard = (function() {
       });
       if (match) {
         game.getCurrentPlayer().incrementScore();
+        game.updateScoreboard();
         game.openModal('win')
       };
     }
@@ -155,19 +156,30 @@ const game = (function() {
 
     modal.firstElementChild.innerHTML = '';
     modal.firstElementChild.append(heading, button);
-  }
+  };
 
   const closeModal = () => {
     const modal = document.querySelector('#modal');
     modal.classList.add('hidden');
-  }
+  };
+
+  const updateScoreboard = () => {
+    const scoreboard = document.querySelector('#scoreboard');
+
+    scoreboard.firstElementChild.querySelector('.score').textContent =
+    player1.getScore() + ' points';
+
+    scoreboard.lastElementChild.querySelector('.score').textContent =
+    player2.getScore() + ' points';
+  };
 
   return {
     getCurrentPlayer,
     switchCurrentPlayer,
     start,
     openModal,
-    closeModal
+    closeModal,
+    updateScoreboard
   };
 })();
 
