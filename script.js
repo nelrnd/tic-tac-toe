@@ -59,9 +59,14 @@ const gameboard = (function() {
         }
       });
       if (match) {
-        game.getCurrentPlayer().incrementScore();
-        game.updateScoreboard();
-        game.openModal('win')
+        preventPlacingMark();
+        animateWinningRow(pattern);
+        // Wait until winning animation ends
+        setTimeout(() => {
+          game.getCurrentPlayer().incrementScore();
+          game.updateScoreboard();
+          game.openModal('win');
+        }, 700);
       };
     }
   };
@@ -103,6 +108,23 @@ const gameboard = (function() {
     markImg.src = `./assets/${mark.toLowerCase()}.svg`;
     markImg.alt = 'mark icon';
     squares[position].appendChild(markImg);
+  };
+
+  const preventPlacingMark = () => {
+    const squares = document.querySelectorAll('.square');
+    for (let i = 0; i < squares.length; i++) {
+      squares[i].classList.add('noClick');
+    }
+  };
+
+  const animateWinningRow = (pattern) => {
+    const squares = document.querySelectorAll('.square');
+
+    pattern.split('').forEach((elem, index) => {
+      if (elem === '1') {
+        squares[index].firstElementChild.classList.add('winningAnim');
+      }
+    });
   };
 
   return {
