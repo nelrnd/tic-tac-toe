@@ -1,31 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500&display=swap');
+
+:root {
+  --light: #DFDFDF;
+  --dark: #494949;
+}
+
 * {
+  font-family: 'Rubik', Arial, sans-serif;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
 body {
-  font-family: sans-serif;
-  padding: 2rem;
+  min-height: 100vh;
+
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 48px;
 }
 
 #gameboard {
-  display: inline-grid;
-  grid-template-columns: repeat(3, 110px);
-  grid-template-rows: repeat(3, 110px);
+  width: min(510px, 100%);
+  aspect-ratio: 1 / 1;
+  
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
 
-  overflow: hidden;
-  border: solid 4px #DFDFDF;
+  border: solid 4px var(--light);
   border-radius: 25px;
 }
 
 #gameboard .square {
-  background-color: white;
-  border: solid 4px #DFDFDF;
+  border: solid 4px var(--light);
 
-  display: grid;
+  display: flex;
   justify-content: center;
   align-items: center;
+}
+
+#gameboard .square > img {
+  width: 60%;
 }
 
 #gameboard .square:nth-of-type(1) {
@@ -39,4 +56,19 @@ body {
 }
 #gameboard .square:nth-of-type(9) {
   border-bottom-right-radius: 21px;
+}
+
+button[id="restart"] {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--dark);
+  padding: 10px 15px;
+  background-color: transparent;
+  border: solid 4px transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+button[id="restart"]:hover {
+  border-color: var(--light);
 }

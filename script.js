@@ -10,6 +10,7 @@ function playerMaker(name, mark) {
     gameboard.grid[position] = mark;
     gameboard.insertMark(position, mark);
     gameboard.checkWinningPatterns(mark);
+    gameboard.checkIfGameboardFull();
     game.switchCurrentPlayer();
   }
 
@@ -61,6 +62,17 @@ const gameboard = (function() {
     }
   };
 
+  const checkIfGameboardFull = () => {
+    let full = true;
+    grid.forEach(item => {
+      if (item === 0) {
+        full = false;
+      }
+    });
+    if (full) console.log('Gameboard is full. This is a tie.');
+    return full;
+  }
+
   const drawGameboard = () => {
     const gameboard = document.querySelector('#gameboard');
     gameboard.innerHTML = '';
@@ -76,6 +88,12 @@ const gameboard = (function() {
     }
   }
 
+  const resetGameboard = () => {
+    for (let i = 0; i < grid.length; i++) {
+      grid[i] = 0;
+    }
+  };
+
   const insertMark = (position, mark) => {
     const squares = document.querySelectorAll('.square');
     const markImg = document.createElement('img');
@@ -89,7 +107,9 @@ const gameboard = (function() {
     checkIfSquareEmpty,
     checkWinningPatterns,
     drawGameboard,
-    insertMark
+    insertMark,
+    resetGameboard,
+    checkIfGameboardFull
   };
 })();
 
@@ -108,6 +128,7 @@ const game = (function() {
   };
 
   const start = () => {
+    gameboard.resetGameboard();
     gameboard.drawGameboard();
     currentPlayer = player1;
   };
@@ -120,3 +141,5 @@ const game = (function() {
 })();
 
 game.start();
+
+document.querySelector('button#restart').addEventListener('click', game.start);
