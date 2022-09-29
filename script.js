@@ -58,7 +58,10 @@ const gameboard = (function() {
           match = false;
         }
       });
-      if (match) console.log('We have a winner!');
+      if (match) {
+        game.getCurrentPlayer().incrementScore();
+        game.openModal('win')
+      };
     }
   };
 
@@ -69,8 +72,7 @@ const gameboard = (function() {
         full = false;
       }
     });
-    if (full) console.log('Gameboard is full. This is a tie.');
-    return full;
+    if (full) game.openModal('draw');
   }
 
   const drawGameboard = () => {
@@ -114,8 +116,8 @@ const gameboard = (function() {
 })();
 
 const game = (function() {
-  const player1 = playerMaker('Nami', 'X');
-  const player2 = playerMaker('Sanji', 'O');
+  const player1 = playerMaker('Player 1', 'X');
+  const player2 = playerMaker('Player 2', 'O');
 
   let currentPlayer;
   const getCurrentPlayer = () => currentPlayer;
@@ -131,12 +133,41 @@ const game = (function() {
     gameboard.resetGameboard();
     gameboard.drawGameboard();
     currentPlayer = player1;
+    closeModal();
   };
+
+  const openModal = (result) => {
+    const modal = document.querySelector('#modal');
+    modal.classList.remove('hidden');
+
+    const heading = document.createElement('h2');
+    const button = document.createElement('button');
+    button.addEventListener('click', game.start);
+
+    if (result === 'win') {
+      heading.textContent = `${getCurrentPlayer().getName()} won the game!`;
+      button.textContent = 'PLAY AGAIN';
+    }
+    if (result === 'draw') {
+      heading.textContent = 'This is a draw!';
+      button.textContent = 'RESTART';
+    }
+
+    modal.firstElementChild.innerHTML = '';
+    modal.firstElementChild.append(heading, button);
+  }
+
+  const closeModal = () => {
+    const modal = document.querySelector('#modal');
+    modal.classList.add('hidden');
+  }
 
   return {
     getCurrentPlayer,
     switchCurrentPlayer,
-    start
+    start,
+    openModal,
+    closeModal
   };
 })();
 
