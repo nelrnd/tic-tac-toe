@@ -1,7 +1,8 @@
-function playerMaker(name, mark) {
+function playerMaker(name, mark, type) {
   let score = 0;
   const getName = () => name;
   const getMark = () => mark;
+  const getType = () => type;
   const getScore = () => score;
   const incrementScore = () => score++;
 
@@ -17,6 +18,7 @@ function playerMaker(name, mark) {
         game.endGame('draw');
       } else {
         game.switchCurrentPlayer();
+        game.setTurn();
       }
     }
   };
@@ -24,6 +26,7 @@ function playerMaker(name, mark) {
   return {
     getName,
     getMark,
+    getType,
     getScore,
     playTurn
   };
@@ -103,22 +106,69 @@ const gameboard = (function() {
     }
   };
 
+  const preventFromClickingSquares = () => {
+    document.querySelectorAll('.square').forEach(square => {
+      square.onclick = null;
+    });
+  };
+
   return {
+    grid,
     drawGameboard,
     checkIfSquareEmpty,
     placeMark,
     drawMark,
     checkIfWon,
     checkIfGridFull,
-    resetGrid
+    resetGrid,
+    preventFromClickingSquares
   };
 })();
 
 const game = (function() {
-  const player1 = playerMaker('Player 1', 'X');
-  const player2 = playerMaker('Player 2', 'O');
+  let gamemode, player1, player2, currentPlayer;
 
-  let currentPlayer;
+  const openGamemodeModal = () => {
+    const modal = document.querySelector('#modal');
+
+    const heading = document.createElement('h2');
+    heading.textContent = 'Choose a gamemode :';
+
+    const button1 = document.createElement('button');
+    button1.textContent = 'Player vs Player';
+    button1.classList.add('full');
+    button1.addEventListener('click', () => {
+      setGamemode(button1.textContent);
+      closeModal();
+      game.startGame();
+    });
+    
+    const button2 = document.createElement('button');
+    button2.textContent = 'Player vs Computer';
+    button2.classList.add('full');
+    button2.addEventListener('click', () => {
+      setGamemode(button2.textContent);
+      closeModal();
+      game.startGame();
+    });
+
+    modal.querySelector('.modal-content').appendChild(heading);
+    modal.querySelector('.modal-content').appendChild(button1);
+    modal.querySelector('.modal-content').appendChild(button2);
+    modal.classList.remove('hidden');
+  };
+
+  const setGamemode = (mode) => {
+    if (mode === 'Player vs Player') {
+      player1 = playerMaker('Player 1', 'X', 'human');
+      player2 = playerMaker('Player 2', 'O', 'human');
+    }
+    if (mode === 'Player vs Computer') {
+      player1 = playerMaker('You', 'X', 'human');
+      player2 = playerMaker('Computer', 'O', 'computer');
+    }
+    gamemode = mode;
+  };
 
   const getCurrentPlayer = () => currentPlayer;
 
@@ -148,21 +198,30 @@ const game = (function() {
   };
 
   const setTurn = () => {
-    document.querySelectorAll('.square').forEach(square => {
-      square.onclick = () => {
-        currentPlayer.playTurn(square.id);
-      };
-    });
-  };
+    gameboard.preventFromClickingSquares();
 
+    if (currentPlayer.getType() === 'human') {
+      document.querySelectorAll('.square').forEach(square => {
+        square.onclick = () => {
+          currentPlayer.playTurn(square.id);
+        };
+      });
+    }
+    if (currentPlayer.getType() === 'computer') {
+      let computerChoice = computer.makeRandomDecision();
+      setTimeout(() => {
+        currentPlayer.playTurn(computerChoice);
+      }, 1000);
+    }
+  };
+  
   const openEndModal = (endType) => {
     const modal = document.querySelector('#modal');
-    modal.classList.remove('hidden');
 
     const heading = document.createElement('h2');
     const button = document.createElement('button');
     button.addEventListener('click', () => {
-      closeEndModal();
+      closeModal();
       startGame();
     });
 
@@ -178,9 +237,10 @@ const game = (function() {
     modal.querySelector('.modal-content').innerHTML = '';
     modal.querySelector('.modal-content').appendChild(heading);
     modal.querySelector('.modal-content').appendChild(button);
+    modal.classList.remove('hidden');
   };
 
-  const closeEndModal = () => {
+  const closeModal = () => {
     document.querySelector('#modal').classList.add('hidden');
   };
 
@@ -196,12 +256,37 @@ const game = (function() {
     getCurrentPlayer,
     switchCurrentPlayer,
     startGame,
+    setTurn,
     endGame,
-    updateScoreboard
+    updateScoreboard,
+    openGamemodeModal,
+    setGamemode
   };
 })();
 
-game.startGame();
+const computer = (function() {
+  const makeFirstDecision = () => {
+    return gameboard.grid.findIndex(item => item === 0);
+  };
+
+  const makeRandomDecision = () => {
+    let emptySquares = [];
+    gameboard.grid.forEach((item, index) => {
+      if (item === 0) emptySquares.push(index);
+    });
+    return emptySquares[Math.floor(Math.random() * emptySquares.length)];
+  };
+
+  return {
+    makeFirstDecision,
+    makeRandomDecision
+  };
+})();
+
+window.addEventListener('load', () => {
+  gameboard.drawGameboard(),
+  game.openGamemodeModal()
+});
 
 document.querySelector('button#restart')
 .addEventListener('click', game.startGame);
