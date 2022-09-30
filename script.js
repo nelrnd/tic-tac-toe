@@ -5,21 +5,27 @@ function playerMaker(name, mark) {
   const getScore = () => score;
   const incrementScore = () => score++;
 
-  const placeMark = (position) => {
-    if (!gameboard.checkIfSquareEmpty(position)) return;
-    gameboard.grid[position] = mark;
-    gameboard.insertMark(position, mark);
-    gameboard.checkWinningPatterns(mark);
-    gameboard.checkIfGameboardFull();
-    game.switchCurrentPlayer();
-  }
+  const playTurn = (position) => {
+    if (gameboard.checkIfSquareEmpty(position)) {
+      gameboard.placeMark(mark, position);
+      gameboard.drawMark(mark, position);
+      if (gameboard.checkIfWon(mark)) {
+        incrementScore();
+        game.updateScoreboard();
+        game.endGame('win');
+      } else if (gameboard.checkIfGridFull()) {
+        game.endGame('draw');
+      } else {
+        game.switchCurrentPlayer();
+      }
+    }
+  };
 
   return {
     getName,
     getMark,
     getScore,
-    incrementScore,
-    placeMark
+    playTurn
   };
 };
 
@@ -32,17 +38,13 @@ const gameboard = (function() {
   ];
 
   const checkIfSquareEmpty = (position) => {
-    if (grid[position] === 0) {
-      return true;
-    } else {
-      return false;
-    }
+    return grid[position] === 0;
   };
 
-  const checkWinningPatterns = (mark) => {
+  const checkIfWon = (mark) => {
     // convert grid to same format as winning patterns
     const gridCopy = [...grid];
-    gridCopy.forEach((item, index) => {
+    grid.forEach((item, index) => {
       if (item === mark) {
         gridCopy[index] = '1';
       } else {
@@ -51,35 +53,37 @@ const gameboard = (function() {
     });
 
     // check if there is a corresponding winning pattern
+    let globalMatch = false;
     for (pattern of winningPatterns) {
-      let match = true;
+      let localMatch = true;
       pattern.split('').forEach((item, index) => {
-        if (item === '1' && gridCopy[index] != '1') {
-          match = false;
-        }
+        if (item === '1' && gridCopy[index] !== '1') localMatch = false;
       });
-      if (match) {
-        preventPlacingMark();
-        animateWinningRow(pattern);
-        // Wait until winning animation ends
-        setTimeout(() => {
-          game.getCurrentPlayer().incrementScore();
-          game.updateScoreboard();
-          game.openModal('win');
-        }, 700);
-      };
+      if (localMatch) globalMatch = true;
     }
+    return globalMatch;
   };
 
-  const checkIfGameboardFull = () => {
-    let full = true;
-    grid.forEach(item => {
-      if (item === 0) {
-        full = false;
-      }
-    });
-    if (full) game.openModal('draw');
-  }
+  const checkIfGridFull = () => {
+    return grid.every(item => item !== 0);
+  };
+
+  const placeMark = (mark, position) => {
+    grid[position] = mark;
+  };
+
+  const drawMark = (mark, position) => {
+    const markImg = document.createElement('img');
+    if (mark === 'X') {
+      markImg.src = './assets/x.svg';
+      markImg.alt = 'x mark';
+    }
+    if (mark === 'O') {
+      markImg.src = './assets/o.svg';
+      markImg.alt = 'o mark';
+    }
+    document.querySelectorAll('.square')[position].appendChild(markImg);
+  };
 
   const drawGameboard = () => {
     const gameboard = document.querySelector('#gameboard');
@@ -89,52 +93,24 @@ const gameboard = (function() {
       const square = document.createElement('div');
       square.id = i;
       square.classList.add('square');
-      square.addEventListener('click', () => {
-        game.getCurrentPlayer().placeMark(i);
-      });
       gameboard.appendChild(square);
     }
   }
 
-  const resetGameboard = () => {
+  const resetGrid = () => {
     for (let i = 0; i < grid.length; i++) {
       grid[i] = 0;
     }
   };
 
-  const insertMark = (position, mark) => {
-    const squares = document.querySelectorAll('.square');
-    const markImg = document.createElement('img');
-    markImg.src = `./assets/${mark.toLowerCase()}.svg`;
-    markImg.alt = 'mark icon';
-    squares[position].appendChild(markImg);
-  };
-
-  const preventPlacingMark = () => {
-    const squares = document.querySelectorAll('.square');
-    for (let i = 0; i < squares.length; i++) {
-      squares[i].classList.add('noClick');
-    }
-  };
-
-  const animateWinningRow = (pattern) => {
-    const squares = document.querySelectorAll('.square');
-
-    pattern.split('').forEach((elem, index) => {
-      if (elem === '1') {
-        squares[index].firstElementChild.classList.add('winningAnim');
-      }
-    });
-  };
-
   return {
-    grid,
-    checkIfSquareEmpty,
-    checkWinningPatterns,
     drawGameboard,
-    insertMark,
-    resetGameboard,
-    checkIfGameboardFull
+    checkIfSquareEmpty,
+    placeMark,
+    drawMark,
+    checkIfWon,
+    checkIfGridFull,
+    resetGrid
   };
 })();
 
@@ -143,7 +119,9 @@ const game = (function() {
   const player2 = playerMaker('Player 2', 'O');
 
   let currentPlayer;
+
   const getCurrentPlayer = () => currentPlayer;
+
   const switchCurrentPlayer = () => {
     if (currentPlayer === player1) {
       currentPlayer = player2;
@@ -152,59 +130,78 @@ const game = (function() {
     }
   };
 
-  const start = () => {
-    gameboard.resetGameboard();
+  const startGame = () => {
+    gameboard.resetGrid();
     gameboard.drawGameboard();
     currentPlayer = player1;
-    closeModal();
+    updateScoreboard();
+    setTurn();
   };
 
-  const openModal = (result) => {
+  const endGame = (endType) => {
+    if (endType === 'win') {
+      openEndModal('win');
+    }
+    if (endType === 'draw') {
+      openEndModal('draw');
+    }
+  };
+
+  const setTurn = () => {
+    document.querySelectorAll('.square').forEach(square => {
+      square.onclick = () => {
+        currentPlayer.playTurn(square.id);
+      };
+    });
+  };
+
+  const openEndModal = (endType) => {
     const modal = document.querySelector('#modal');
     modal.classList.remove('hidden');
 
     const heading = document.createElement('h2');
     const button = document.createElement('button');
-    button.addEventListener('click', game.start);
+    button.addEventListener('click', () => {
+      closeEndModal();
+      startGame();
+    });
 
-    if (result === 'win') {
+    if (endType === 'win') {
       heading.textContent = `${getCurrentPlayer().getName()} won the game!`;
       button.textContent = 'PLAY AGAIN';
     }
-    if (result === 'draw') {
+    if (endType === 'draw') {
       heading.textContent = 'This is a draw!';
       button.textContent = 'RESTART';
     }
 
-    modal.firstElementChild.innerHTML = '';
-    modal.firstElementChild.append(heading, button);
+    modal.querySelector('.modal-content').innerHTML = '';
+    modal.querySelector('.modal-content').appendChild(heading);
+    modal.querySelector('.modal-content').appendChild(button);
   };
 
-  const closeModal = () => {
-    const modal = document.querySelector('#modal');
-    modal.classList.add('hidden');
+  const closeEndModal = () => {
+    document.querySelector('#modal').classList.add('hidden');
   };
 
   const updateScoreboard = () => {
     const scoreboard = document.querySelector('#scoreboard');
-
-    scoreboard.firstElementChild.querySelector('.score').textContent =
-    player1.getScore() + ' points';
-
-    scoreboard.lastElementChild.querySelector('.score').textContent =
-    player2.getScore() + ' points';
+    scoreboard.querySelector('div:nth-of-type(1) > .name').textContent = player1.getName();
+    scoreboard.querySelector('div:nth-of-type(1) > .score').textContent = player1.getScore() + ' points';
+    scoreboard.querySelector('div:nth-of-type(2) > .name').textContent = player2.getName();
+    scoreboard.querySelector('div:nth-of-type(2) > .score').textContent = player2.getScore() + ' points';
   };
 
   return {
     getCurrentPlayer,
     switchCurrentPlayer,
-    start,
-    openModal,
-    closeModal,
+    startGame,
+    endGame,
     updateScoreboard
   };
 })();
 
-game.start();
+game.startGame();
 
-document.querySelector('button#restart').addEventListener('click', game.start);
+document.querySelector('button#restart')
+.addEventListener('click', game.startGame);
