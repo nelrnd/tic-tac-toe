@@ -10,7 +10,7 @@ function playerMaker(name, mark, type) {
     if (gameboard.checkIfSquareEmpty(position)) {
       gameboard.placeMark(mark, position);
       gameboard.drawMark(mark, position);
-      if (gameboard.checkIfWon(mark)) {
+      if (gameboard.checkIfWon()) {
         incrementScore();
         game.updateScoreboard();
         game.endGame('win');
@@ -44,23 +44,15 @@ const gameboard = (function() {
     return grid[position] === 0;
   };
 
-  const checkIfWon = (mark) => {
-    // convert grid to same format as winning patterns
-    const gridCopy = [...grid];
-    grid.forEach((item, index) => {
-      if (item === mark) {
-        gridCopy[index] = '1';
-      } else {
-        gridCopy[index] = '0';
-      }
-    });
+  const checkIfWon = () => {
+    const grid = convertGridFormat();
 
     // check if there is a corresponding winning pattern
     let globalMatch = false;
     for (pattern of winningPatterns) {
       let localMatch = true;
       pattern.split('').forEach((item, index) => {
-        if (item === '1' && gridCopy[index] !== '1') localMatch = false;
+        if (item === '1' && grid[index] !== '1') localMatch = false;
       });
       if (localMatch) globalMatch = true;
     }
@@ -100,6 +92,20 @@ const gameboard = (function() {
     }
   }
 
+  const convertGridFormat = () => {
+    const newGrid = [...grid];
+    grid.forEach((item, index) => {
+      if (item === game.getCurrentPlayer().getMark()) {
+        newGrid[index] = '1';
+      } else if (item !== 0) {
+        newGrid[index] = '2';
+      } else {
+        newGrid[index] = '0';
+      }
+    });
+    return newGrid;
+  };
+
   const resetGrid = () => {
     for (let i = 0; i < grid.length; i++) {
       grid[i] = 0;
@@ -114,6 +120,7 @@ const gameboard = (function() {
 
   return {
     grid,
+    winningPatterns,
     drawGameboard,
     checkIfSquareEmpty,
     placeMark,
@@ -121,12 +128,13 @@ const gameboard = (function() {
     checkIfWon,
     checkIfGridFull,
     resetGrid,
+    convertGridFormat,
     preventFromClickingSquares
   };
 })();
 
 const game = (function() {
-  let gamemode, player1, player2, currentPlayer;
+  let gamemode, player1, player2, currentPlayer, lastBeginner;
 
   const openGamemodeModal = () => {
     const modal = document.querySelector('#modal');
@@ -172,6 +180,32 @@ const game = (function() {
 
   const getCurrentPlayer = () => currentPlayer;
 
+  const setBeginnerPlayer = () => {
+    if (lastBeginner === player1) {
+      currentPlayer = player2;
+    } else {
+      currentPlayer = player1;
+    }
+  };
+
+  const showBeginnerPlayer = () => {
+    const modal = document.querySelector('#modal');
+    modal.classList.remove('hidden');
+
+    const heading = document.createElement('h2');
+    heading.textContent = `${getCurrentPlayer().getName()} begins`;
+    modal.querySelector('.modal-content').innerHTML = '';
+    modal.querySelector('.modal-content').appendChild(heading);
+
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 1000);
+  };
+
+  const setLastBeginner = () => {
+    lastBeginner = getCurrentPlayer();
+  };
+
   const switchCurrentPlayer = () => {
     if (currentPlayer === player1) {
       currentPlayer = player2;
@@ -183,9 +217,11 @@ const game = (function() {
   const startGame = () => {
     gameboard.resetGrid();
     gameboard.drawGameboard();
-    currentPlayer = player1;
+    setBeginnerPlayer();
+    showBeginnerPlayer();
     updateScoreboard();
     setTurn();
+    setLastBeginner();
   };
 
   const endGame = (endType) => {
@@ -208,7 +244,7 @@ const game = (function() {
       });
     }
     if (currentPlayer.getType() === 'computer') {
-      let computerChoice = computer.makeRandomDecision();
+      let computerChoice = computer.makeDecision();
       setTimeout(() => {
         currentPlayer.playTurn(computerChoice);
       }, 1000);
@@ -265,8 +301,20 @@ const game = (function() {
 })();
 
 const computer = (function() {
-  const makeFirstDecision = () => {
-    return gameboard.grid.findIndex(item => item === 0);
+  const checkWinInOneMove = () => {
+    const grid = gameboard.convertGridFormat();
+    let canWin = false;
+
+    for (pattern of gameboard.winningPatterns) {
+      let i = 0;
+      pattern.split('').forEach((item, index) => {
+        if (item === '1' && grid[index] !== '2') {
+          if (grid[index] === '1') i++;
+        }
+      });
+      if (i === 2) canWin = true;
+    }
+    return canWin;
   };
 
   const makeRandomDecision = () => {
@@ -277,9 +325,76 @@ const computer = (function() {
     return emptySquares[Math.floor(Math.random() * emptySquares.length)];
   };
 
+  const makeDefensiveDecision = () => {
+    const grid = gameboard.convertGridFormat();
+
+    let choice = -1;
+
+    for (pattern of gameboard.winningPatterns) {
+      let i = 0;
+      pattern.split('').forEach((item, index) => {
+        if (item === '1' && grid[index] === '2') {
+          i++;
+        } else if (item === '1' && grid[index] === '1') {
+          i--;
+        }
+      });
+      if (i === 2) {
+        pattern.split('').forEach((item, index) => {
+          if (item === '1' && grid[index] === '0') {
+            choice = index;
+          }
+        });
+      }
+    }
+
+    return choice;
+  };
+
+  const makeOffensiveDecision = () => {
+    const grid = gameboard.convertGridFormat();
+
+    let choice = -1;
+
+    for (pattern of gameboard.winningPatterns) {
+      let i = 0;
+      pattern.split('').forEach((item, index) => {
+        if (item === '1' && grid[index] !== '2') {
+          if (grid[index] === '1') {
+            i++;
+          }
+        }
+      });
+      if (i === 2) {
+        pattern.split('').forEach((item, index) => {
+          if (item === '1' && grid[index] === '0') {
+            choice = index;
+          }
+        });
+      }
+    }
+    return choice;
+  };
+
+  const makeDecision = () => {
+    if (checkWinInOneMove() && makeOffensiveDecision() !== -1) {
+      console.log('Computer can win in one move');
+      return makeOffensiveDecision();
+    }
+    // If it is worth making a defensive decision, make one
+    if (makeDefensiveDecision() !== -1) {
+      return makeDefensiveDecision();
+    }
+    // If it is worth making an offensive decision, make one
+    if (makeOffensiveDecision() !== -1) {
+      return makeOffensiveDecision();
+    }
+    // Otherwise, make a random decision
+    return makeRandomDecision();
+  };
+
   return {
-    makeFirstDecision,
-    makeRandomDecision
+    makeDecision
   };
 })();
 
